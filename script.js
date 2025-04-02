@@ -16,25 +16,14 @@ function shuffleArray(array) {
 }
 
 // --- List of your image filenames ---
-// ***** Make sure these match files in your 'images' folder *****
+// ***** Using the list you provided previously *****
 const availableImageFiles = [
-    "038413c2-1de3-4eb0-9adb-03c45bedadb8.jpg",
-    "0e1f3879-1b96-4112-8df4-69e2c14cfd1d.jpg",
-    "0e751c5e-ea7b-452f-acaa-136225c16a7b.jpg",
-    "0eefd4a6-adb5-41f9-b975-735e5ebc9ee7.jpg",
-    "1000aa90-7e1c-4668-ba57-f14929117ff2.jpg",
-    "252b58cc-7233-48c1-916f-cffe37e15274.jpg",
-    // You can add more from your list if needed, or use different ones
-    "2dcbafe0-00b0-4752-b30f-0b8c904f6965.jpg",
-    "31e3f51a-e4df-4c87-a9f5-94f759757b6e.jpg",
-    "477683d4-41f7-44c8-868c-f6abc2e47bd8.jpg",
-    "4be2040d-8643-4549-bf3f-97e797222545.jpg",
-    "525c02fd-5cfa-4885-9abf-96927a1d920b.jpg",
-    "52b6ed95-7856-4954-b4b7-461668b8aa19.jpg",
-    "55d6ca7f-2ada-4679-906e-046737b18c7f.jpg",
-    "56452cb7-d4d6-4387-a8fc-bfd32684546e.jpg",
-    "5d421d5f-931c-4b36-87c7-03d844288a9e.jpg",
-    // ... Add others from your list if you want more variety ...
+    "1.jpg", "10.jpg", "11.jpg", "12.jpg", "13.jpg", "14.jpg", "15.jpg",
+    "17.jpg", "21.jpg", "22.jpg", "23.jpg", "24.jpg", "25.jpg", "26.jpg",
+    "27.jpg", "28.jpg", "29.jpg", "3.jpg",  "30.jpg", "31.jpg", "32.jpg",
+    "33.jpg", "35.jpg", "36.jpg", "37.jpg", "38.jpg", "4.jpg",  "40.jpg",
+    "41.jpg", "42.jpg", "43.jpg", "44.JPEG","45.JPEG","46.JPEG","47.JPEG",
+    "6.jpg",  "9.jpg"
 ];
 // --- End of filename list ---
 
@@ -54,7 +43,7 @@ let composer;
 function setupPostProcessing() {
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.5, 0.4, 0.8);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.5, 0.4, 0.8); // Adjust bloom if needed
     composer.addPass(bloomPass);
     composer.setSize(sizes.width, sizes.height);
     composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -62,20 +51,107 @@ function setupPostProcessing() {
 setupPostProcessing();
 
 // --- Card Settings ---
-const numberOfCards = 6; const cardWidth = 1.5; const imageAspectRatio = 1.4; const cardHeight = cardWidth * imageAspectRatio; const cardThickness = 0.05; const cardGeometry = new THREE.BoxGeometry(cardWidth, cardHeight, cardThickness); const cards = [];
+const numberOfCards = 6; const cardWidth = 1.5; const imageAspectRatio = 1.4; // Aspect ratio of the CARD FACE (Height / Width)
+const cardHeight = cardWidth * imageAspectRatio; const cardThickness = 0.05; const cardGeometry = new THREE.BoxGeometry(cardWidth, cardHeight, cardThickness); const cards = [];
 
-// --- Card Edge Material ---
-const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0xB08D57, roughness: 0.4, metalness: 0.7 });
+// --- Card Materials ---
+const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0xB08D57, roughness: 0.4, metalness: 0.7 }); // Golden edge
+const cardBackColor = '#1A1A1A'; // Dark background for back
+const cardFrontColor = '#ADD8E6'; // Light Blue background for front canvas behind image // <<< UPDATED COLOR
+const cardBorderColor = '#B08D57'; // Golden border color
 
-// --- Function to Generate Card Back Texture (Grey Rose) ---
+// --- Function to Generate Card Back Texture ---
 function createGeneratedCardBackTexture() {
     const canvasWidth = 256; const canvasHeight = Math.floor(canvasWidth * imageAspectRatio); const canvas = document.createElement('canvas'); canvas.width = canvasWidth; canvas.height = canvasHeight; const ctx = canvas.getContext('2d');
-    // Background Color (Grey Rose)
-    ctx.fillStyle = '#1A1A1A'; // Greyish Rose (Or try #C08081 for more pink)
+    // Background Color
+    ctx.fillStyle = cardBackColor;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     // Border
-    const borderThickness = canvasWidth * 0.05; ctx.strokeStyle = '#B08D57'; ctx.lineWidth = borderThickness; ctx.strokeRect(borderThickness / 2, borderThickness / 2, canvasWidth - borderThickness, canvasHeight - borderThickness); const texture = new THREE.CanvasTexture(canvas); texture.needsUpdate = true; return texture;
+    const borderThickness = canvasWidth * 0.05; ctx.strokeStyle = cardBorderColor; ctx.lineWidth = borderThickness; ctx.strokeRect(borderThickness / 2, borderThickness / 2, canvasWidth - borderThickness, canvasHeight - borderThickness); const texture = new THREE.CanvasTexture(canvas); texture.needsUpdate = true; return texture;
 }
+
+// --- Function to Generate Front Card Texture (Image + Border) ---
+function createFrontCardTexture(imagePath, callback) {
+    const canvasTextureWidth = 512; // Resolution for the texture canvas
+    const canvasTextureHeight = Math.floor(canvasTextureWidth * imageAspectRatio);
+    const textureCanvas = document.createElement('canvas');
+    textureCanvas.width = canvasTextureWidth;
+    textureCanvas.height = canvasTextureHeight;
+    const ctx = textureCanvas.getContext('2d');
+
+    const borderThickness = canvasTextureWidth * 0.035; // Adjust border thickness relative to canvas size
+
+    // 1. Draw Background Color for the front face
+    ctx.fillStyle = cardFrontColor; // Uses the updated light blue color
+    ctx.fillRect(0, 0, canvasTextureWidth, canvasTextureHeight);
+
+    // 2. Load the actual image
+    const img = new Image();
+    img.crossOrigin = "Anonymous"; // Important if loading from different domains or potentially data URLs
+    img.onload = () => {
+        // 3. Calculate drawing dimensions to center and preserve aspect ratio
+        const imgAspectRatio = img.naturalHeight / img.naturalWidth;
+        const canvasAspectRatio = canvasTextureHeight / canvasTextureWidth; // Same as imageAspectRatio setting
+
+        let drawWidth, drawHeight, drawX, drawY;
+        const padding = borderThickness * 1.5; // Add padding between image and border
+
+        // Calculate available drawing area inside padding
+        const availableWidth = canvasTextureWidth - 2 * padding;
+        const availableHeight = canvasTextureHeight - 2 * padding;
+
+        if (imgAspectRatio > canvasAspectRatio) {
+            // Image is taller/thinner than canvas area
+            drawHeight = availableHeight;
+            drawWidth = drawHeight / imgAspectRatio;
+            drawX = padding + (availableWidth - drawWidth) / 2;
+            drawY = padding;
+        } else {
+            // Image is wider/shorter than canvas area (or same ratio)
+            drawWidth = availableWidth;
+            drawHeight = drawWidth * imgAspectRatio;
+            drawX = padding;
+            drawY = padding + (availableHeight - drawHeight) / 2;
+        }
+
+        // 4. Draw the loaded image centered onto the canvas
+        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+
+        // 5. Draw the Golden Border (around the padding area)
+        ctx.strokeStyle = cardBorderColor;
+        ctx.lineWidth = borderThickness;
+        // Draw border slightly inside the edge
+        ctx.strokeRect(
+            borderThickness / 2,
+            borderThickness / 2,
+            canvasTextureWidth - borderThickness,
+            canvasTextureHeight - borderThickness
+        );
+
+        // 6. Create the final texture and call the callback
+        const finalTexture = new THREE.CanvasTexture(textureCanvas);
+        finalTexture.colorSpace = THREE.SRGBColorSpace; // Important for color correctness
+        finalTexture.needsUpdate = true;
+        callback(finalTexture); // Pass the generated texture back
+    };
+    img.onerror = (error) => {
+        console.error(`Error loading image for front texture: '${imagePath}'`, error);
+        // Optionally: Create a fallback texture (e.g., solid color or error message)
+        // For now, we'll just log the error and the card front might be blank/black
+        // Create a simple fallback texture
+         ctx.fillStyle = 'red';
+         ctx.fillRect(0, 0, canvasTextureWidth, canvasTextureHeight);
+         ctx.font = "20px Arial";
+         ctx.fillStyle = "white";
+         ctx.textAlign = "center";
+         ctx.fillText("Error", canvasTextureWidth / 2, canvasTextureHeight / 2);
+         const errorTexture = new THREE.CanvasTexture(textureCanvas);
+         errorTexture.needsUpdate = true;
+         callback(errorTexture); // Pass the error texture back
+    };
+    img.src = imagePath; // Start loading the image
+}
+
 
 // --- Static Initial Layout Settings ---
 const initialLayoutRadius = 4.0; // How far cards are from the center
@@ -83,57 +159,80 @@ const initialLayoutAngle = Math.PI / 1.8; // Total angle spread (~100 degrees)
 const initialYPosition = 0; // Vertical position
 
 // --- Texture Loading & Card Creation ---
-const textureLoader = new THREE.TextureLoader(); const cardBackTexture = createGeneratedCardBackTexture();
+const textureLoader = new THREE.TextureLoader(); // Keep for potential other uses, though back is generated now
+const cardBackTexture = createGeneratedCardBackTexture();
 
 // --- Select Unique Images ---
-// 1. Get unique filenames
 const uniqueImageFiles = [...new Set(availableImageFiles)];
-// 2. Check if enough unique files exist
 if (uniqueImageFiles.length < numberOfCards) {
     console.error(`Error: Need at least ${numberOfCards} unique images listed in availableImageFiles, found only ${uniqueImageFiles.length}.`);
     document.body.innerHTML = `<h1 style="color: red;">Error: Not enough unique images listed in script.js...</h1>`;
     throw new Error(`Insufficient unique images listed.`);
 }
-// 3. Shuffle the unique list
 const shuffledUniqueFiles = shuffleArray(uniqueImageFiles);
-// 4. Select the required number
 const selectedImageFiles = shuffledUniqueFiles.slice(0, numberOfCards);
 console.log("Selected unique images:", selectedImageFiles);
 
 // --- Create Cards ---
-// Check if selection was successful (should always be if check above passed)
+let cardsCreated = 0; // Counter for async creation
 if (selectedImageFiles.length === numberOfCards) {
     selectedImageFiles.forEach((filename, i) => {
         const imagePath = `images/${filename}`;
-        console.log(`Attempting to load front texture: ${imagePath}`);
-        const frontTexture = textureLoader.load(imagePath, undefined, undefined, (error) => console.error(`Error loading front texture: '${imagePath}'`, error));
+        console.log(`Requesting front texture generation for: ${imagePath}`);
 
-        // ***** FRONT BORDER NOTE *****
-        // To add a border to the front, you should ideally edit
-        // the image files themselves (e.g., filename) in an image editor
-        // to include the border directly on the picture.
+        // *** Use the new function to create front texture ***
+        createFrontCardTexture(imagePath, (frontTexture) => {
+            // This code runs *after* the image is loaded and canvas texture is ready
+             console.log(`Front texture created for: ${filename}`);
 
-        const backMaterial = new THREE.MeshStandardMaterial({ map: cardBackTexture, roughness: 0.7, metalness: 0.1 });
-        const frontMaterial = new THREE.MeshStandardMaterial({ map: frontTexture, roughness: 0.85, metalness: 0.05 });
-        const materials = [edgeMaterial, edgeMaterial, edgeMaterial, edgeMaterial, frontMaterial, backMaterial];
-        const cardMesh = new THREE.Mesh(cardGeometry, materials);
-        cardMesh.castShadow = true; cardMesh.receiveShadow = true;
+            const backMaterial = new THREE.MeshStandardMaterial({
+                map: cardBackTexture,
+                roughness: 0.7,
+                metalness: 0.1
+            });
+            const frontMaterial = new THREE.MeshStandardMaterial({
+                map: frontTexture, // Use the generated canvas texture
+                roughness: 0.85, // Adjust as needed
+                metalness: 0.05   // Adjust as needed
+            });
+            const materials = [
+                edgeMaterial,  // right edge (+x)
+                edgeMaterial,  // left edge (-x)
+                edgeMaterial,  // top edge (+y)
+                edgeMaterial,  // bottom edge (-y)
+                frontMaterial, // front face (+z)
+                backMaterial   // back face (-z)
+            ];
+            const cardMesh = new THREE.Mesh(cardGeometry, materials);
+            cardMesh.castShadow = true; cardMesh.receiveShadow = true;
 
-        // Static Initial Position & Rotation (Wide Fan, Backs Showing)
-        const fraction = numberOfCards <= 1 ? 0.5 : i / (numberOfCards - 1);
-        const currentAngle = (fraction - 0.5) * initialLayoutAngle;
-        const xPos = initialLayoutRadius * Math.sin(currentAngle);
-        const zPos = initialLayoutRadius * Math.cos(currentAngle) - initialLayoutRadius;
-        cardMesh.position.set(xPos, initialYPosition, zPos);
-        cardMesh.rotation.x = 0;
-        cardMesh.rotation.y = -currentAngle + Math.PI; // Face BACK towards center
-        cardMesh.rotation.z = 0;
+            // Static Initial Position & Rotation (Wide Fan, Backs Showing)
+            const fraction = numberOfCards <= 1 ? 0.5 : i / (numberOfCards - 1);
+            const currentAngle = (fraction - 0.5) * initialLayoutAngle;
+            const xPos = initialLayoutRadius * Math.sin(currentAngle);
+            const zPos = initialLayoutRadius * Math.cos(currentAngle) - initialLayoutRadius;
+            cardMesh.position.set(xPos, initialYPosition, zPos);
+            cardMesh.rotation.x = 0;
+            cardMesh.rotation.y = -currentAngle + Math.PI; // Face BACK towards center
+            cardMesh.rotation.z = 0;
 
-        // Set initial state to isFlipped = true (back showing)
-        cardMesh.userData = { id: i, filename: filename, isFlipped: true, isAnimating: false };
-        scene.add(cardMesh); cards.push(cardMesh);
+            // Set initial state to isFlipped = true (back showing)
+            cardMesh.userData = { id: i, filename: filename, isFlipped: true, isAnimating: false };
+            scene.add(cardMesh);
+            cards.push(cardMesh); // Add card to the array
+
+            cardsCreated++;
+            if (cardsCreated === numberOfCards) {
+                 console.log(`All ${numberOfCards} cards created and added to scene.`);
+                 // Now it's safer to assume cards are ready for interaction logic setup,
+                 // though the `tick` loop might have already started.
+            }
+        });
     });
+} else {
+     console.error("Card selection failed, cannot create cards.");
 }
+
 
 // --- Ground Plane ---
 const groundGeometry = new THREE.PlaneGeometry(30, 30); const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x080808, roughness: 0.9, metalness: 0.1 }); const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial); groundMesh.rotation.x = -Math.PI / 2;
@@ -145,25 +244,23 @@ const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2(); let 
 let isGamePlayable = false; let isGameActive = false; // isGameActive flags the transition animation
 function updateMouseCoords(event) { mouse.x = (event.clientX / sizes.width) * 2 - 1; mouse.y = - (event.clientY / sizes.height) * 2 + 1; }
 
+// --- Event Listeners (mousemove, click) --- //
 window.addEventListener('mousemove', (event) => {
-    // Only allow hover effect during active gameplay (isGamePlayable is true)
     if (!isGamePlayable) {
-         // Reset hover if needed when not playable
          if (currentlyHovered && !currentlyHovered.userData.isAnimating) {
-            gsap.to(currentlyHovered.scale, { x: 1, y: 1, z: 1, duration: 0.3, ease: "power1.out" });
-            gsap.to(currentlyHovered.position, { y: 0, duration: 0.3, ease: "power1.out" }); // Game row Y=0
-            currentlyHovered = null;
-        }
+             gsap.to(currentlyHovered.scale, { x: 1, y: 1, z: 1, duration: 0.3, ease: "power1.out" });
+             gsap.to(currentlyHovered.position, { y: 0, duration: 0.3, ease: "power1.out" }); // Game row Y=0
+             currentlyHovered = null;
+         }
         return;
     }
 
-    // --- Hover Logic during Gameplay ---
     updateMouseCoords(event);
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(cards);
-    const targetYPosition = 0; // Y position of cards in game row
+    // Make sure cards array is populated before intersecting
+    const intersects = cards.length > 0 ? raycaster.intersectObjects(cards) : [];
+    const targetYPosition = 0;
 
-    // Handle hover out
     if (currentlyHovered && (intersects.length === 0 || intersects[0].object !== currentlyHovered)) {
         if (!currentlyHovered.userData.isAnimating) {
             gsap.to(currentlyHovered.scale, { x: 1, y: 1, z: 1, duration: 0.3, ease: "power1.out" });
@@ -171,59 +268,48 @@ window.addEventListener('mousemove', (event) => {
         }
         currentlyHovered = null;
     }
-    // Handle hover on
     if (intersects.length > 0 && intersects[0].object !== currentlyHovered) {
-        // De-hover previous card if any
         if (currentlyHovered && !currentlyHovered.userData.isAnimating) {
             gsap.to(currentlyHovered.scale, { x: 1, y: 1, z: 1, duration: 0.3, ease: "power1.out" });
             gsap.to(currentlyHovered.position, { y: targetYPosition, duration: 0.3, ease: "power1.out" });
         }
-        // Hover new card
         currentlyHovered = intersects[0].object;
         if (!currentlyHovered.userData.isAnimating) {
-            // Apply hover effect
             gsap.to(currentlyHovered.scale, { x: 1.05, y: 1.05, z: 1.05, duration: 0.3, ease: "power1.out" });
             gsap.to(currentlyHovered.position, { y: targetYPosition + 0.2, duration: 0.3, ease: "power1.out" });
         }
     }
-    // --- End Hover Logic ---
 });
 
 
 window.addEventListener('click', () => {
     // Logging before the check
-    console.log(`Click Check: isGamePlayable=${isGamePlayable}, currentlyHovered=${currentlyHovered ? currentlyHovered.userData.id : null}, isAnimating=${currentlyHovered ? currentlyHovered.userData.isAnimating : 'N/A'}`);
+    // console.log(`Click Check: isGamePlayable=${isGamePlayable}, currentlyHovered=${currentlyHovered ? currentlyHovered.userData.id : null}, isAnimating=${currentlyHovered ? currentlyHovered.userData.isAnimating : 'N/A'}`);
 
-    // Only allow clicks during active gameplay on a hovered, non-animating card
     if (!isGamePlayable || !currentlyHovered || currentlyHovered.userData.isAnimating) {
         return;
     }
     // Logging before calling flipCard
-    console.log(`Click Trigger: Flipping card ${currentlyHovered.userData.id}`);
-    // Trigger flip
+     console.log(`Click Trigger: Flipping card ${currentlyHovered.userData.id}`);
     flipCard(currentlyHovered);
 });
 
-
-// --- Card Flip Logic (Only flips face-up) ---
+// --- Card Flip Logic --- //
 function flipCard(card) {
     console.log(`FlipCard ENTERED for card ${card.userData.id}, isFlipped=${card.userData.isFlipped}`);
 
-    // Only flip if currently face down (isFlipped is true)
     if (!card.userData.isFlipped) {
-        console.log(`FlipCard RETURN EARLY: Card ${card.userData.id} is already face up.`);
-        return; // Do nothing if already face up
-    }
-
-    // Check animation flag AFTER checking flipped state
-    if (card.userData.isAnimating) {
-        console.log(`FlipCard RETURN EARLY: Card ${card.userData.id} is already animating.`);
+         console.log(`FlipCard RETURN EARLY: Card ${card.userData.id} is already face up.`);
         return;
     }
-    card.userData.isAnimating = true; // Mark as animating
 
-    // Target rotation is ALWAYS face up (0)
-    const targetRotationY = 0; // Always target face up
+    if (card.userData.isAnimating) {
+         console.log(`FlipCard RETURN EARLY: Card ${card.userData.id} is already animating.`);
+        return;
+    }
+    card.userData.isAnimating = true;
+
+    const targetRotationY = 0; // Target face-up rotation
     const duration = 0.8;
     const targetYPosition = 0; // Y position of cards in game row
 
@@ -237,7 +323,7 @@ function flipCard(card) {
         duration: duration,
         ease: "power3.inOut", // Use a smooth easing for the flip
         onComplete: () => {
-            console.log(`FlipCard COMPLETE for card ${card.userData.id}. Setting isAnimating=false.`); // Log completion
+             console.log(`FlipCard COMPLETE for card ${card.userData.id}. Setting isAnimating=false.`); // Log completion
             // Set flipped state directly to false (face up)
             card.userData.isFlipped = false; // Card is now face up
             card.userData.isAnimating = false; // Mark animation as complete
@@ -262,15 +348,32 @@ function handleHoverAfterAnimation(card) {
         // Mouse moved off the card during animation
         currentlyHovered = null;
     }
- }
+}
 
 
-// --- Function to Arrange Cards for Game (Single Row) ---
+// --- Function to Arrange Cards for Game --- //
 function arrangeForGame() {
     if (isGameActive) return; // Prevent triggering during animation
-    if (cards.length === 0) { console.warn("Cannot arrange for game, no cards created."); return; }
+    // Add a check to ensure cards are loaded before arranging
+    if (cards.length !== numberOfCards) {
+         console.warn("Cannot arrange for game, cards not fully created yet. Please wait.");
+         // Maybe disable button temporarily or provide feedback like changing button text
+         const btn = document.getElementById('start-game-button');
+         if(btn) {
+            btn.textContent = "Loading..."; // Indicate loading state
+            // Optionally re-enable/reset text later when cardsCreated === numberOfCards
+         }
+        return;
+    }
+
+     // If button text was changed, reset it
+     const btn = document.getElementById('start-game-button');
+     if(btn && btn.textContent === "Loading...") {
+         btn.textContent = "Start Game"; // Or whatever original text was
+     }
+
+
     console.log("arrangeForGame: Starting animation sequence.");
-    // isCarouselActive removed
     isGameActive = true; // Indicate game transition is active
     isGamePlayable = false; // Disable clicking/hovering during transition
 
@@ -279,16 +382,16 @@ function arrangeForGame() {
 
     const tl = gsap.timeline({
         onComplete: () => {
-            console.log("ArrangeForGame Timeline COMPLETE.");
+             console.log("ArrangeForGame Timeline COMPLETE.");
             // Reset isAnimating for ALL cards here after the entire timeline finishes
             cards.forEach(card => {
                  console.log(`Timeline complete: Resetting isAnimating for card ${card.userData.id}`);
-                 card.userData.isAnimating = false;
-                 card.userData.isFlipped = true; // Ensure final state is face down
+                card.userData.isAnimating = false;
+                card.userData.isFlipped = true; // Ensure final state is face down
             });
             isGamePlayable = true; // Allow interactions NOW
             isGameActive = false; // Transition animation finished
-            console.log("Gameplay enabled.");
+             console.log("Gameplay enabled.");
         }
     });
 
@@ -307,16 +410,15 @@ function arrangeForGame() {
         // Animate from current static fan pose (face back) to target row pose (face down)
         tl.to(card.position, {
             x: targetX, y: targetY, z: targetZ, duration: 1.0, ease: "power2.inOut"
-            }, 0.2 + i * 0.08) // Stagger start
-
+        }, 0.2 + i * 0.08) // Stagger start
         // Animate rotation
-          .to(card.rotation, {
+         .to(card.rotation, {
             x: 0, // Ensure flat
             y: targetRotationY,
             z: 0,
             duration: 0.8,
             ease: "power2.inOut"
-            }, 0.3 + i * 0.08); // Stagger start slightly later
+        }, 0.3 + i * 0.08); // Stagger start slightly later
     });
 }
 
@@ -333,28 +435,31 @@ window.addEventListener('resize', () => {
 // --- Orbit Controls ---
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true; controls.dampingFactor = 0.05;
-// Target the center of the layout
-controls.target.set(0, initialYPosition, 0);
-controls.minDistance = 3; controls.maxDistance = 20; controls.maxPolarAngle = Math.PI / 2.0;
+controls.target.set(0, initialYPosition, 0); // Target the center of the initial layout
+controls.minDistance = 3; controls.maxDistance = 20;
+controls.maxPolarAngle = Math.PI / 2.0; // Prevent looking from below ground
 
 // --- Animation Loop ---
 const clock = new THREE.Clock();
 function tick() {
-    // Removed carousel update logic
-
     controls.update(); // Update orbit controls
-    // Render scene
-    if (composer) { composer.render(); } else { renderer.render(scene, camera); }
+
+    // Render scene using composer if available
+    if (composer) {
+        composer.render();
+    } else {
+        renderer.render(scene, camera);
+    }
+
     window.requestAnimationFrame(tick); // Request next frame
 }
 
 // --- Start ---
-// Final check before starting the loop
-if (selectedImageFiles.length === numberOfCards && cards.length === numberOfCards) {
-    tick(); // Start the animation loop
-    console.log(`3D Card Collection Initialized (${numberOfCards} cards). Initial layout: Static Fan (Backs Showing).`);
-    console.warn("Check console for texture errors!");
-} else {
-    console.error("Execution halted due to initialization errors (check image list or card creation loop).");
-    // Error message should already be on page if image list was short.
-}
+// We start the tick loop immediately. Card creation is asynchronous.
+// Interaction logic (hover, click, arrange) should be robust enough
+// to handle the cards array being populated gradually.
+tick();
+console.log("3D Card Scene Initialized. Loading Textures...");
+console.warn("Check console for texture loading errors!");
+// Note: The check for 'selectedImageFiles.length === numberOfCards' happens before async creation starts.
+// The actual 'cards.length === numberOfCards' check is now inside arrangeForGame.
