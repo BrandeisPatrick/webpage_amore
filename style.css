@@ -1,30 +1,37 @@
 /* style.css */
-/* Optional: Import Fonts if you use them */
-/* @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap'); */
+
+/* Import some nice fonts */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400&display=swap');
 
 body {
     margin: 0;
     overflow: hidden; /* Prevent scrollbars */
-    font-family: sans-serif; /* Basic fallback font */
-    background-color: #111; /* Dark background */
-    color: #eee; /* Default light text color */
+    /* Use Roboto for general text */
+    font-family: 'Roboto', sans-serif;
+    background-color: #0a0a0a; /* Slightly darker background */
+    color: #eee;
 }
 
 #main-title {
     position: absolute;
     width: 100%;
-    top: 20px;
+    /* Adjust vertical position slightly if needed */
+    top: 30px;
     left: 0;
     z-index: 10;
-    font-weight: normal;
-    color: #e0e0e0;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    /* Use a more decorative font for the title */
+    font-family: 'Playfair Display', serif;
+    font-weight: 700; /* Ensure bold is applied */
+    color: #f0f0f0; /* Slightly brighter white */
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7); /* More pronounced shadow */
     margin: 0;
     padding: 10px 0;
     text-align: center;
     pointer-events: none; /* Allow clicks to go through */
-    font-size: 2.2em;
-    transition: opacity 0.5s ease-out; /* For fade out */
+    font-size: 2.8em; /* Make it bigger */
+    letter-spacing: 1.5px; /* Add some character spacing */
+    /* Animate opacity AND top position */
+    transition: opacity 0.6s ease-out, top 0.6s ease-out;
 }
 
 #canvas-container {
@@ -33,7 +40,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1; /* Ensure canvas is behind UI */
+    z-index: 1;
 }
 
 #webgl-canvas {
@@ -45,82 +52,100 @@ body {
 /* --- Button Common Styles --- */
 button {
     cursor: pointer;
-    border-radius: 5px;
-    transition: background-color 0.3s ease, opacity 0.5s ease-out;
-    font-family: inherit; /* Use body font */
+    border-radius: 8px; /* Slightly more rounded */
+    /* Smooth transitions for multiple properties */
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease, opacity 0.5s ease-out;
+    font-family: 'Roboto', sans-serif; /* Consistent font */
+    font-weight: bold;
+    border: none; /* Remove default border */
+    /* Add a base shadow */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    color: #fff;
+    padding: 12px 25px; /* Base padding */
+    font-size: 1.1em;
 }
 
 button:hover {
-    filter: brightness(1.2); /* Simple hover effect */
+   /* Lift and grow slightly on hover */
+   transform: translateY(-3px) scale(1.03);
+   /* Enhance shadow on hover */
+   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+   filter: brightness(1.15); /* Brighter on hover */
 }
 
+button:active {
+    transform: translateY(0px) scale(1); /* Push down on click */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3); /* Less shadow when active */
+    filter: brightness(1);
+}
 
 /* --- Style for the Start Button --- */
 #start-game-button {
     position: absolute;
-    bottom: 10%;      /* Position lower */
+    bottom: 10%;
     left: 50%;
     transform: translateX(-50%); /* Center horizontally */
     z-index: 10;
-    padding: 12px 25px;
-    font-size: 1.1em;
-    background-color: #333;
-    color: #fff;
-    border: 1px solid #555;
+    padding: 15px 35px; /* Larger padding */
+    font-size: 1.2em;
+    /* Subtle dark gradient */
+    background: linear-gradient(145deg, #4a4a4a, #282828);
+    /* White text remains */
 }
 
 #start-game-button:disabled {
-    background-color: #444;
-    color: #888;
+    background: linear-gradient(145deg, #555, #333); /* Disabled gradient */
+    color: #999;
     cursor: not-allowed;
+    transform: translateY(0) scale(1); /* Reset transform */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Reset shadow */
 }
 
 /* --- Style for the Refresh Button (Top Right) --- */
 #refresh-button {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 25px; /* Align better with title */
+    right: 25px;
     z-index: 10;
-    padding: 8px 15px;
-    font-size: 0.9em;
-    background-color: #555;
-    color: #fff;
-    border: 1px solid #777;
+    padding: 10px 18px; /* Slightly larger */
+    font-size: 1em;
+    /* Mid-tone gradient */
+    background: linear-gradient(145deg, #666, #444);
+    opacity: 0.8; /* Start slightly transparent */
+}
+
+#refresh-button:hover {
+    opacity: 1; /* Fully opaque on hover */
+     /* Keep other hover styles from common button */
 }
 
 
 /* --- Styles for the Card Text Display (Shows MESSAGE) --- */
 #card-text-display {
     position: absolute;
-    bottom: 20%;      /* Position above the start button */
+    /* Start slightly lower, will animate up */
+    bottom: 20%;
     left: 50%;
     transform: translateX(-50%);
-    width: 80%;       /* Allow it to take more width */
-    max-width: 500px; /* Prevent getting too wide */
-    background-color: rgba(30, 30, 30, 0.9); /* Darker, slightly more opaque background */
-    color: #E0E0E0;      /* Light text color */
-    padding: 15px 20px; /* Padding for text */
-    border-radius: 8px; /* Rounded rectangle */
-    font-size: 1.1em;   /* Readable font size for messages */
-    font-family: sans-serif;
+    width: 85%; /* Slightly wider */
+    max-width: 550px; /* Max width */
+    /* Darker, slightly glassy background */
+    background-color: rgba(25, 25, 25, 0.92);
+    /* Add a subtle border */
+    border: 1px solid rgba(200, 200, 200, 0.1);
+    color: #E8E8E8;
+    padding: 20px 25px; /* More padding */
+    border-radius: 10px; /* More rounded */
+    font-size: 1.15em; /* Slightly larger text */
+    font-family: 'Roboto', sans-serif;
     text-align: center;
-    line-height: 1.4;   /* Better line spacing for readability */
-    opacity: 0;         /* Start hidden */
-    transition: opacity 0.5s ease-in-out; /* Animate opacity */
+    line-height: 1.5; /* Better spacing */
+    opacity: 0; /* Start hidden */
+    /* Animate opacity AND bottom position */
+    transition: opacity 0.5s ease-in-out, bottom 0.5s ease-in-out;
     pointer-events: none; /* Allow clicks to pass through */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.5); /* Slightly stronger shadow */
-    z-index: 100;       /* Ensure it's on top */
-    box-sizing: border-box; /* Include padding in width calculation */
+    /* Deeper shadow */
+    box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+    z-index: 100;
+    box-sizing: border-box;
 }
-/* --- End Card Text Styles --- */
-
-/* Optional: Add styles for game UI elements if needed later */
-/*
-#game-ui {
-    position: absolute;
-    top: 80px;
-    left: 20px;
-    z-index: 10;
-    color: #fff;
-}
-*/

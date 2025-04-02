@@ -48,8 +48,7 @@ const cardMessages = {
     "46.JPEG": "My K-pop star, amore!",
     "47.JPEG": "Amore, you are so stunning, like stars in the dark sky!!!!!!!"
 };
-// *** MODIFICATION 1: Uncomment and use the default message ***
-const defaultMessage = "You are amazing"; // Default message to show if no specific message is found
+const defaultMessage = "You are amazing"; // Default message
 
 // --- Get References to UI Elements ---
 const textDisplayElement = document.getElementById('card-text-display');
@@ -57,10 +56,9 @@ if (!textDisplayElement) { console.error("Text display element #card-text-displa
 const startButton = document.getElementById('start-game-button');
 const refreshButton = document.getElementById('refresh-button');
 
-
 // --- Basic Setup ---
 const canvas = document.getElementById('webgl-canvas'); if (!canvas) console.error("Canvas element #webgl-canvas not found!");
-const scene = new THREE.Scene(); scene.background = new THREE.Color('#111111');
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#0a0a0a'); // Slightly darker bg
 const sizes = { width: window.innerWidth, height: window.innerHeight };
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100); camera.position.set(0, 1.5, 9); scene.add(camera);
 
@@ -68,23 +66,29 @@ const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 
 const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 renderer.useLegacyLights = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.outputEncoding = THREE.sRGBEncoding; // Correct property name
+renderer.outputEncoding = THREE.sRGBEncoding; // Correct property name - DEPRECATED use outputColorSpace
+// renderer.outputColorSpace = THREE.SRGBColorSpace; // Use this in newer Three.js versions
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 // --- Lighting ---
-const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8); scene.add(hemisphereLight);
-const keyLight = new THREE.DirectionalLight(0xffffff, 1.5); keyLight.position.set(3, 4, 3); keyLight.castShadow = true;
-keyLight.shadow.mapSize.width = 1024; keyLight.shadow.mapSize.height = 1024; keyLight.shadow.camera.near = 0.5; keyLight.shadow.camera.far = 20; keyLight.shadow.bias = -0.002; scene.add(keyLight);
+const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x555555, 0.9); // Slightly brighter ambient down light
+scene.add(hemisphereLight);
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.6); // Slightly stronger key light
+keyLight.position.set(3, 4, 3); keyLight.castShadow = true;
+keyLight.shadow.mapSize.width = 1024; // Keep decent shadow resolution
+keyLight.shadow.mapSize.height = 1024;
+keyLight.shadow.camera.near = 0.5; keyLight.shadow.camera.far = 20; keyLight.shadow.bias = -0.002; scene.add(keyLight);
 
 // --- Post-Processing ---
 let composer;
 function setupPostProcessing() {
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.5, 0.4, 0.8); // Adjust bloom if needed
+    // Slightly adjusted Bloom for potentially better performance/look
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.4, 0.5, 0.75); // strength, radius, threshold
     composer.addPass(bloomPass);
     composer.setSize(sizes.width, sizes.height);
     composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -94,17 +98,18 @@ setupPostProcessing();
 // --- Card Settings ---
 const numberOfCards = 6;
 const cardWidth = 1.5;
-const imageAspectRatio = 1.4; // Aspect ratio of the CARD FACE (Height / Width)
+const imageAspectRatio = 1.4;
 const cardHeight = cardWidth * imageAspectRatio;
 const cardThickness = 0.05;
 const cardGeometry = new THREE.BoxGeometry(cardWidth, cardHeight, cardThickness);
 const cards = [];
 
 // --- Card Materials ---
-const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0xB08D57, roughness: 0.4, metalness: 0.7 }); // Golden edge
-const cardBackColor = '#1A1A1A'; // Dark background for back
+// const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0xB08D57, roughness: 0.4, metalness: 0.7 }); // Original Golden edge
+const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0xB8860B, roughness: 0.3, metalness: 0.8 }); // Darker, richer gold
+const cardBackColor = '#1F1F1F'; // Darker back
 const cardFrontColor = '#ADD8E6'; // Light Blue background for front canvas behind image
-const cardBorderColor = '#B08D57'; // Golden border color
+const cardBorderColor = '#B8860B'; // Match edge color
 
 // --- Function to Generate Card Back Texture ---
 function createGeneratedCardBackTexture() {
@@ -116,7 +121,7 @@ function createGeneratedCardBackTexture() {
 
 // --- Function to Generate Front Card Texture (Image + Border) ---
 function createFrontCardTexture(imagePath, callback) {
-    const canvasTextureWidth = 512; // Resolution for the texture canvas
+    const canvasTextureWidth = 512;
     const canvasTextureHeight = Math.floor(canvasTextureWidth * imageAspectRatio);
     const textureCanvas = document.createElement('canvas');
     textureCanvas.width = canvasTextureWidth;
@@ -128,7 +133,7 @@ function createFrontCardTexture(imagePath, callback) {
     ctx.fillRect(0, 0, canvasTextureWidth, canvasTextureHeight);
 
     const img = new Image();
-    img.crossOrigin = "Anonymous"; // Important for loading from potentially different origins if needed
+    img.crossOrigin = "Anonymous";
     img.onload = () => {
         const imgAspectRatio = img.naturalHeight / img.naturalWidth;
         const canvasAspectRatio = canvasTextureHeight / canvasTextureWidth;
@@ -155,7 +160,7 @@ function createFrontCardTexture(imagePath, callback) {
         ctx.strokeRect(borderThickness / 2, borderThickness / 2, canvasTextureWidth - borderThickness, canvasTextureHeight - borderThickness);
 
         const finalTexture = new THREE.CanvasTexture(textureCanvas);
-        finalTexture.colorSpace = THREE.SRGBColorSpace; // Use correct color space
+        finalTexture.colorSpace = THREE.SRGBColorSpace;
         finalTexture.needsUpdate = true;
         callback(finalTexture);
     };
@@ -167,7 +172,7 @@ function createFrontCardTexture(imagePath, callback) {
         ctx.fillText("Error", canvasTextureWidth / 2, canvasTextureHeight / 2);
         const errorTexture = new THREE.CanvasTexture(textureCanvas);
         errorTexture.needsUpdate = true;
-        callback(errorTexture); // Provide an error texture
+        callback(errorTexture);
     };
     img.src = imagePath;
 }
@@ -175,7 +180,7 @@ function createFrontCardTexture(imagePath, callback) {
 // --- Static Initial Layout Settings ---
 const initialLayoutRadius = 4.0;
 const initialLayoutAngle = Math.PI / 1.8;
-const initialYPosition = 0; // Set cards initially at Y=0
+const initialYPosition = 0;
 
 // --- Texture Loading & Card Creation ---
 const textureLoader = new THREE.TextureLoader();
@@ -196,7 +201,7 @@ console.log("Selected unique images:", selectedImageFiles);
 let cardsCreated = 0;
 if (selectedImageFiles.length === numberOfCards) {
     selectedImageFiles.forEach((filename, i) => {
-        const imagePath = `images/${filename}`; // Assuming images are in an 'images' subfolder
+        const imagePath = `images/${filename}`;
         console.log(`Requesting front texture generation for: ${imagePath}`);
         createFrontCardTexture(imagePath, (frontTexture) => {
             console.log(`Front texture created for: ${filename}`);
@@ -206,36 +211,43 @@ if (selectedImageFiles.length === numberOfCards) {
             const cardMesh = new THREE.Mesh(cardGeometry, materials);
             cardMesh.castShadow = true; cardMesh.receiveShadow = true;
 
-            // Calculate initial position in arc
             const fraction = numberOfCards <= 1 ? 0.5 : i / (numberOfCards - 1);
             const currentAngle = (fraction - 0.5) * initialLayoutAngle;
             const xPos = initialLayoutRadius * Math.sin(currentAngle);
             const zPos = initialLayoutRadius * Math.cos(currentAngle) - initialLayoutRadius;
             cardMesh.position.set(xPos, initialYPosition, zPos);
-            cardMesh.rotation.y = -currentAngle + Math.PI; // Start face down towards center
+            cardMesh.rotation.y = -currentAngle + Math.PI;
 
-            cardMesh.userData = { id: i, filename: filename, isFlipped: true, isAnimating: false }; // isFlipped=true means BACK showing
+            cardMesh.userData = { id: i, filename: filename, isFlipped: true, isAnimating: false };
             scene.add(cardMesh);
             cards.push(cardMesh);
 
             cardsCreated++;
             if (cardsCreated === numberOfCards) {
                 console.log(`All ${numberOfCards} card meshes created and added to scene.`);
-                // Consider enabling start button here if it was disabled
+                 // Enable start button if it was disabled during loading attempt
+                 if(startButton && startButton.disabled && startButton.textContent === "Loading...") {
+                    startButton.textContent = "Start Game";
+                    startButton.disabled = false;
+                 }
             }
         });
     });
 } else {
      console.error("Card selection failed, cannot create cards.");
-     // Disable start button or show error message
+     if(startButton) startButton.disabled = true; // Disable start if selection fails
 }
 
 // --- Ground Plane ---
 const groundGeometry = new THREE.PlaneGeometry(30, 30);
-const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x080808, roughness: 0.9, metalness: 0.1 });
+const groundMaterial = new THREE.MeshStandardMaterial({
+    color: 0x151515, // Slightly lighter base
+    roughness: 0.6,  // Less rough (more reflection)
+    metalness: 0.2   // Slightly more metallic
+});
 const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
 groundMesh.rotation.x = -Math.PI / 2;
-groundMesh.position.y = initialYPosition - cardHeight / 2 - 0.1; // Position relative to cards
+groundMesh.position.y = initialYPosition - cardHeight / 2 - 0.1;
 groundMesh.receiveShadow = true;
 scene.add(groundMesh);
 
@@ -243,90 +255,106 @@ scene.add(groundMesh);
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let currentlyHovered = null;
-let isGamePlayable = false; // Controls if cards can be clicked
-let isGameActive = false;   // Prevents starting game arrangement multiple times
+let isGamePlayable = false;
+let isGameActive = false;
 
 function updateMouseCoords(event) {
-    mouse.x = (event.clientX / sizes.width) * 2 - 1;
-    mouse.y = - (event.clientY / sizes.height) * 2 + 1;
+    // Adjust for touch events if needed
+    const touch = event.touches ? event.touches[0] : event;
+    mouse.x = (touch.clientX / sizes.width) * 2 - 1;
+    mouse.y = - (touch.clientY / sizes.height) * 2 + 1;
 }
 
-// --- Event Listeners (mousemove, click) ---
-window.addEventListener('mousemove', (event) => {
-    if (!isGamePlayable) {
-        // If game not playable, ensure no lingering hover effects
-        if (currentlyHovered && !currentlyHovered.userData.isAnimating) {
+// --- Event Listeners (mousemove, click, touch) ---
+function handlePointerMove(event) { // Renamed to handle multiple event types
+     if (!isGamePlayable) {
+         // If game not playable, ensure no lingering hover effects
+         if (currentlyHovered && !currentlyHovered.userData.isAnimating) {
              gsap.to(currentlyHovered.scale, { x: 1, y: 1, z: 1, duration: 0.3, ease: "power1.out" });
-             gsap.to(currentlyHovered.position, { y: initialYPosition, duration: 0.3, ease: "power1.out" }); // Use initialYPosition
+             gsap.to(currentlyHovered.position, { y: initialYPosition, duration: 0.3, ease: "power1.out" });
              currentlyHovered = null;
-        }
-        return; // Don't process hover if game not playable
-    }
+         }
+         return;
+     }
 
-    updateMouseCoords(event);
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = cards.length > 0 ? raycaster.intersectObjects(cards) : [];
-    const targetYPosition = initialYPosition; // Base Y position
+     updateMouseCoords(event);
+     raycaster.setFromCamera(mouse, camera);
+     const intersects = cards.length > 0 ? raycaster.intersectObjects(cards) : [];
+     const targetYPosition = initialYPosition;
 
-    // Check if mouse moved OFF the previously hovered card
-    if (currentlyHovered && (intersects.length === 0 || intersects[0].object !== currentlyHovered)) {
-        if (!currentlyHovered.userData.isAnimating) {
-            gsap.to(currentlyHovered.scale, { x: 1, y: 1, z: 1, duration: 0.3, ease: "power1.out" });
-            gsap.to(currentlyHovered.position, { y: targetYPosition, duration: 0.3, ease: "power1.out" }); // Return to base Y
-        }
-        currentlyHovered = null;
-    }
+     // Check if pointer moved OFF the previously hovered card
+     if (currentlyHovered && (intersects.length === 0 || intersects[0].object !== currentlyHovered)) {
+         if (!currentlyHovered.userData.isAnimating) {
+             gsap.to(currentlyHovered.scale, { x: 1, y: 1, z: 1, duration: 0.3, ease: "power1.out" });
+             gsap.to(currentlyHovered.position, { y: targetYPosition, duration: 0.3, ease: "power1.out" });
+         }
+         currentlyHovered = null;
+     }
 
-    // Check if mouse moved ONTO a new card
-    if (intersects.length > 0 && intersects[0].object !== currentlyHovered) {
-        // De-hover the previous one if it exists (though the check above should handle it)
-        if (currentlyHovered && !currentlyHovered.userData.isAnimating) {
-            gsap.to(currentlyHovered.scale, { x: 1, y: 1, z: 1, duration: 0.3, ease: "power1.out" });
-            gsap.to(currentlyHovered.position, { y: targetYPosition, duration: 0.3, ease: "power1.out" });
-        }
-        // Hover the new one
-        currentlyHovered = intersects[0].object;
-        if (!currentlyHovered.userData.isAnimating) {
-            gsap.to(currentlyHovered.scale, { x: 1.05, y: 1.05, z: 1.05, duration: 0.3, ease: "power1.out" });
-            gsap.to(currentlyHovered.position, { y: targetYPosition + 0.2, duration: 0.3, ease: "power1.out" }); // Lift slightly
-        }
-    }
-});
+     // Check if pointer moved ONTO a new card
+     if (intersects.length > 0 && intersects[0].object !== currentlyHovered) {
+         // De-hover the previous one (should be handled above, but good failsafe)
+         if (currentlyHovered && !currentlyHovered.userData.isAnimating) {
+             gsap.to(currentlyHovered.scale, { x: 1, y: 1, z: 1, duration: 0.3, ease: "power1.out" });
+             gsap.to(currentlyHovered.position, { y: targetYPosition, duration: 0.3, ease: "power1.out" });
+         }
+         // Hover the new one
+         currentlyHovered = intersects[0].object;
+         if (!currentlyHovered.userData.isAnimating) {
+             gsap.to(currentlyHovered.scale, { x: 1.05, y: 1.05, z: 1.05, duration: 0.3, ease: "power1.out" });
+             gsap.to(currentlyHovered.position, { y: targetYPosition + 0.2, duration: 0.3, ease: "power1.out" });
+         }
+     }
+}
 
-window.addEventListener('click', () => {
-    if (!isGamePlayable || !currentlyHovered || currentlyHovered.userData.isAnimating) {
-        return; // Only allow clicks if game is playable, a card is hovered, and it's not animating
-    }
-    console.log(`Click Trigger: Flipping card ${currentlyHovered.userData.id} (${currentlyHovered.userData.filename})`);
-    flipCard(currentlyHovered);
-});
+function handlePointerClick() { // Renamed to handle multiple event types
+    // On touch devices, hover might not happen before click, so re-check intersection
+    // However, for simplicity, we'll rely on the currentlyHovered state set by move/touch
+     if (!isGamePlayable || !currentlyHovered || currentlyHovered.userData.isAnimating) {
+         return;
+     }
+     console.log(`Click/Tap Trigger: Flipping card ${currentlyHovered.userData.id} (${currentlyHovered.userData.filename})`);
+     flipCard(currentlyHovered);
+}
 
-// --- Card Flip Logic (Modified for Default Text Display) ---
+window.addEventListener('mousemove', handlePointerMove);
+window.addEventListener('touchmove', handlePointerMove, { passive: true }); // Use passive for performance on touchmove
+
+window.addEventListener('click', handlePointerClick);
+// No separate touchend needed if click handles taps well enough
+
+// --- Card Flip Logic (Modified for Default Text Display & Animation) ---
 function flipCard(card) {
-    const filename = card.userData.filename; // Get filename early
+    const filename = card.userData.filename;
     console.log(`--- flipCard START ---`);
-    console.log(`Clicked card filename: '${filename}' (Type: ${typeof filename})`);
+    console.log(`Clicked card filename: '${filename}'`);
 
-    // *** MODIFICATION 2: Check for specific message and use default if not found ***
     const hasSpecificMessage = cardMessages.hasOwnProperty(filename);
-    const messageToDisplay = hasSpecificMessage ? cardMessages[filename] : defaultMessage; // Use default message if no specific one
-    console.log(`Does cardMessages have key '${filename}'? : ${hasSpecificMessage}`);
+    const messageToDisplay = hasSpecificMessage ? cardMessages[filename] : defaultMessage;
     console.log(`Message to display: "${messageToDisplay}"`);
 
     // --- Check for re-clicking face-up card ---
-    // If isFlipped is false, it means the FRONT (image) is already showing
     if (!card.userData.isFlipped) {
         console.log(`Card '${filename}' is already face-up. Re-evaluating display.`);
         if (textDisplayElement) {
             console.log(`Updating text display for face-up card.`);
-            textDisplayElement.textContent = messageToDisplay; // Show specific message OR default
-            // *** MODIFICATION 3: Always fade in text on re-click (to show default or specific) ***
-            gsap.to(textDisplayElement, { opacity: 1, duration: 0.3 }); // Always ensure it's visible
+            textDisplayElement.textContent = messageToDisplay;
+            // Animate IN (slide up and fade in) even on re-click
+            // Use the target 'bottom' value from CSS (e.g., '22%')
+            gsap.fromTo(textDisplayElement,
+                { opacity: textDisplayElement.style.opacity || 0, bottom: "20%" }, // Start from current/down
+                {
+                    opacity: 1,
+                    bottom: "22%", // Target position
+                    duration: 0.5,
+                    ease: "power1.out"
+                }
+             );
         } else {
             console.error("textDisplayElement missing when trying to update face-up card!");
         }
         console.log(`--- flipCard END (face-up card) ---`);
-        return; // Exit function
+        return;
     }
     // --- End re-click check ---
 
@@ -338,17 +366,23 @@ function flipCard(card) {
     card.userData.isAnimating = true;
     console.log(`Card '${filename}' starting animation. Setting isAnimating=true.`);
 
-    // Hide current text display immediately before flipping BACK to FRONT
+    // Hide current text display (slide down and fade out) BEFORE flipping
     if (textDisplayElement) {
-        console.log(`Fading out text display before flip animation.`);
-        gsap.to(textDisplayElement, { opacity: 0, duration: 0.2 });
+        console.log(`Fading/Sliding out text display before flip animation.`);
+        gsap.to(textDisplayElement, {
+            opacity: 0,
+            bottom: "20%", // Animate downwards to the 'hidden' position state
+            duration: 0.3,
+            ease: "power1.in" // Ease in for disappearance
+        });
     } else {
         console.error("textDisplayElement missing before flip animation!");
     }
 
     const targetRotationY = 0; // Rotate to face forward
-    const duration = 0.8;
-    const targetYPosition = initialYPosition; // Ensure it flips at the base Y level
+    const duration = 0.9; // Slightly longer flip duration
+    const targetYPosition = initialYPosition;
+    const easeFlip = "back.out(1.5)"; // Add a bit of overshoot to the flip
 
     // Animate scale/position back to normal before flip if needed (hover effect)
     gsap.to(card.scale, { x: 1, y: 1, z: 1, duration: 0.2, ease: "power1.in" });
@@ -358,10 +392,10 @@ function flipCard(card) {
     gsap.to(card.rotation, {
         y: targetRotationY,
         duration: duration,
-        ease: "power3.inOut",
+        ease: easeFlip, // Use the overshoot ease
         onComplete: () => {
             console.log(`--- flipCard onComplete START for '${filename}' ---`);
-            card.userData.isFlipped = false; // Mark as face-up (FRONT showing)
+            card.userData.isFlipped = false; // Mark as face-up
             card.userData.isAnimating = false;
             console.log(`Set isFlipped=false, isAnimating=false`);
 
@@ -369,132 +403,158 @@ function flipCard(card) {
             console.log(`[onComplete] Checking textDisplayElement...`);
             if (textDisplayElement) {
                 console.log(`[onComplete] textDisplayElement found.`);
-                textDisplayElement.textContent = messageToDisplay; // Set content to specific or default message
+                textDisplayElement.textContent = messageToDisplay;
                 console.log(`[onComplete] Set textContent to: '${textDisplayElement.textContent}'`);
-                // *** MODIFICATION 4: Always fade in the text display after flip ***
-                console.log(`[onComplete] Fading text display opacity to: 1`);
-                gsap.to(textDisplayElement, {
-                    opacity: 1, // Always fade to opacity 1
-                    duration: 0.5,
-                    onComplete: () => { // Optional log
-                        console.log(`[onComplete] Text fade animation complete. Final opacity should be ~1`);
-                    }
-                   });
+                // Animate IN (slide up and fade in)
+                console.log(`[onComplete] Fading/Sliding text display in.`);
+                // Use the target 'bottom' value from CSS (e.g., '22%')
+                gsap.fromTo(textDisplayElement,
+                    { opacity: 0, bottom: "18%" }, // Start slightly lower and transparent
+                    {
+                        opacity: 1,
+                        bottom: "22%", // Target position
+                        duration: 0.6,
+                        ease: "power2.out",
+                        onComplete: () => {
+                            console.log(`[onComplete] Text fade/slide animation complete.`);
+                        }
+                    });
             } else {
                 console.error("[onComplete] textDisplayElement NOT FOUND!");
             }
             // --- End Show Text Logic ---
 
-            handleHoverAfterAnimation(card); // Re-apply hover effect if mouse is still over
+            handleHoverAfterAnimation(card);
             console.log(`--- flipCard onComplete END for '${filename}' ---`);
         }
     });
-     console.log(`--- flipCard END (main logic initiated) ---`);
+    console.log(`--- flipCard END (main logic initiated) ---`);
 }
 
 
 // --- Handle Hover After Animation ---
 function handleHoverAfterAnimation(card) {
-    // Check if the mouse is currently over the card after animation finishes
+    // Check if the mouse/pointer is currently over the card after animation finishes
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects([card]); // Check only this card
+    const intersects = raycaster.intersectObjects([card]);
     const targetYPosition = initialYPosition;
 
     if (intersects.length > 0) {
-        // Mouse is still over the card, re-apply hover effect
-        console.log(`[handleHoverAfterAnimation] Mouse still over ${card.userData.filename}, re-applying hover.`);
+        console.log(`[handleHoverAfterAnimation] Pointer still over ${card.userData.filename}, re-applying hover.`);
         currentlyHovered = card; // Ensure it's marked as hovered
-        if (!currentlyHovered.userData.isAnimating) { // Double check it's not animating
+        if (!currentlyHovered.userData.isAnimating) { // Double check
             gsap.to(currentlyHovered.scale, { x: 1.05, y: 1.05, z: 1.05, duration: 0.3, ease: "power1.out" });
             gsap.to(currentlyHovered.position, { y: targetYPosition + 0.2, duration: 0.3, ease: "power1.out" });
         }
     } else if (currentlyHovered === card) {
-        // Mouse moved away while card was flipping/animating
-         console.log(`[handleHoverAfterAnimation] Mouse no longer over ${card.userData.filename}.`);
-        currentlyHovered = null; // Clear hover state if mouse isn't over it
-        // Scale/position should already be reset before flip, so no need to animate back here
+        // Pointer moved away while card was flipping/animating
+         console.log(`[handleHoverAfterAnimation] Pointer no longer over ${card.userData.filename}.`);
+        currentlyHovered = null;
     }
 }
 
-// --- Function to Arrange Cards for Game ---
+// --- Function to Arrange Cards for Game (with Enhanced Animation) ---
 function arrangeForGame() {
-    if (isGameActive) return; // Prevent multiple calls
+    if (isGameActive) return;
     if (cards.length !== numberOfCards) {
         console.warn("Cannot arrange for game, cards not fully created yet. Wait.");
         const btn = document.getElementById('start-game-button');
-        if(btn) { btn.textContent = "Loading..."; btn.disabled = true; }
-        // Set timeout to re-enable button - better approach would be Promise/callback on card creation
-        setTimeout(() => {
-            if(btn && btn.textContent === "Loading...") { // Check if still loading
-                 btn.textContent = "Start Game";
-                 btn.disabled = false;
-                 console.warn("Re-enabled start button after delay. Card loading might still be ongoing.");
-            }
-        }, 2000); // Increased delay
+        if(btn && !btn.disabled) { // Only show loading if not already disabled
+            btn.textContent = "Loading...";
+            btn.disabled = true;
+            // Setup a check to re-enable if loading finishes
+             setTimeout(() => {
+                 if(btn && btn.textContent === "Loading...") {
+                      btn.textContent = "Start Game";
+                      btn.disabled = false;
+                      console.warn("Re-enabled start button after delay. Card loading might still be ongoing.");
+                 }
+             }, 3000); // Increased delay slightly
+        }
         return;
     }
 
     // Ensure button text/state is correct if loading finished quickly
-    const btn = document.getElementById('start-game-button');
-    if(btn && btn.textContent === "Loading...") {
-        btn.textContent = "Start Game"; btn.disabled = false;
+    if(startButton && startButton.textContent === "Loading...") {
+        startButton.textContent = "Start Game"; startButton.disabled = false;
     }
 
     console.log("ArrangeForGame: Starting animation sequence.");
-    isGameActive = true; // Mark arranging as active
-    isGamePlayable = false; // Disable clicks during arrangement
+    isGameActive = true;
+    isGamePlayable = false;
 
-    // Hide text display when game starts arranging
+    // Hide text display immediately when game starts arranging
     if (textDisplayElement) {
-         gsap.to(textDisplayElement, { opacity: 0, duration: 0.3 });
+        gsap.to(textDisplayElement, {
+            opacity: 0,
+            bottom: "20%", // Ensure it slides down if visible
+            duration: 0.3,
+            ease: "power1.in"
+         });
     }
 
     const targetCardSpacingX = cardWidth * 1.25;
     const targetRowWidth = (numberOfCards - 1) * targetCardSpacingX;
     const targetRowOffsetX = -targetRowWidth / 2;
-    const targetYPosition = initialYPosition; // Arrange at base Y level
-    const targetZPosition = 1.5; // Bring cards forward
+    const targetYPosition = initialYPosition;
+    const targetZPosition = 1.5;
 
     const tl = gsap.timeline({
         onComplete: () => {
             console.log("ArrangeForGame Timeline COMPLETE. Gameplay enabled.");
             cards.forEach(card => {
                 card.userData.isAnimating = false;
-                card.userData.isFlipped = true; // Ensure all cards are marked as face-down
+                card.userData.isFlipped = true; // Ensure all marked face-down
             });
-            isGamePlayable = true; // Enable card clicks
-            isGameActive = false;  // Mark arranging as finished
+            isGamePlayable = true;
+            isGameActive = false;
         }
     });
 
-    // Fade out title and start button
-    tl.to("#main-title", { opacity: 0, duration: 0.5, pointerEvents: 'none' }, 0); // Disable pointer events too
-    tl.to("#start-game-button", { opacity: 0, duration: 0.5, pointerEvents: 'none' }, 0);
-    // Note: Refresh button remains visible
+    // Fade and SLIDE UP title
+    tl.to("#main-title", {
+        opacity: 0,
+        top: '-60px', // Move it further up off-screen relative to its CSS `top`
+        duration: 0.7,
+        ease: "power2.in", // Smooth disappearance
+        pointerEvents: 'none'
+    }, 0); // Start immediately
+
+    // Fade out start button
+    tl.to("#start-game-button", {
+        opacity: 0,
+        duration: 0.5,
+        ease: "power1.in",
+        pointerEvents: 'none'
+    }, 0.1); // Start slightly after title
+
 
     // Animate each card
     cards.forEach((card, i) => {
-        card.userData.isAnimating = true; // Mark card as animating
+        card.userData.isAnimating = true;
         const targetX = i * targetCardSpacingX + targetRowOffsetX;
-        const targetY = targetYPosition; // Target Y
-        const targetZ = targetZPosition; // Target Z
-        const targetRotationY = Math.PI; // Ensure they end face down (Math.PI rotation)
+        const targetY = targetYPosition;
+        const targetZ = targetZPosition;
+        const targetRotationY = Math.PI; // Face down
 
-        // Add animations to the timeline
+        // Use a slightly more dynamic ease like back.out
+        const easeType = "back.out(1.2)"; // Subtle overshoot
+        const duration = 1.2; // Slightly longer for smoother feel
+
         tl.to(card.position, {
-              x: targetX,
-              y: targetY,
-              z: targetZ,
-              duration: 1.0,
-              ease: "power2.inOut"
-          }, 0.2 + i * 0.08) // Stagger start time slightly
-          .to(card.rotation, {
-              x: 0, // Ensure no x rotation
-              y: targetRotationY,
-              z: 0, // Ensure no z rotation
-              duration: 0.8,
-              ease: "power2.inOut"
-          }, 0.3 + i * 0.08); // Stagger start time slightly
+            x: targetX,
+            y: targetY,
+            z: targetZ,
+            duration: duration,
+            ease: easeType
+        }, 0.3 + i * 0.1) // Stagger start time more
+        .to(card.rotation, {
+            x: 0,
+            y: targetRotationY,
+            z: 0,
+            duration: duration * 0.8, // Rotation slightly faster than position
+            ease: easeType
+        }, 0.3 + i * 0.1); // Start rotation with position
     });
 }
 
@@ -509,12 +569,14 @@ if (startButton) {
 if (refreshButton) {
     refreshButton.addEventListener('click', () => {
         console.log("Refresh button clicked - reloading page.");
-        location.reload(); // Reloads the current page
+        // Add a slight delay and fade out maybe? (Optional)
+        document.body.style.transition = 'opacity 0.3s ease-out';
+        document.body.style.opacity = 0;
+        setTimeout(() => location.reload(), 300); // Reload after fade
     });
 } else {
     console.error("Refresh button #refresh-button not found!");
 }
-
 
 // --- Handle Window Resize ---
 window.addEventListener('resize', () => {
@@ -537,15 +599,15 @@ window.addEventListener('resize', () => {
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
-controls.target.set(0, initialYPosition, 0); // Target the base Y position
+controls.target.set(0, initialYPosition, 0);
 controls.minDistance = 3;
 controls.maxDistance = 20;
-controls.maxPolarAngle = Math.PI / 2.0; // Prevent going below ground slightly more strictly
+controls.maxPolarAngle = Math.PI / 2.05; // Allow slightly less looking down
 
 // --- Animation Loop ---
 const clock = new THREE.Clock();
 function tick() {
-    controls.update(); // Update controls every frame
+    controls.update(); // Update controls every frame for damping
 
     // Render using composer if available, otherwise use renderer directly
     if (composer) {
