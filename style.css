@@ -1,32 +1,29 @@
 /* style.css */
 /* Optional: Import Fonts if you use them */
-/* @import url('https://fonts.googleapis.com/css2?family=SomeElegantFont&display=swap'); */
+/* @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap'); */
 
 body {
     margin: 0;
     overflow: hidden; /* Prevent scrollbars */
-    /* Use a font closer to the target if desired */
-    font-family: sans-serif; /* Fallback */
-    /* Dark background similar to D&G */
-    background-color: #111; /* Dark grey/black */
-    color: #eee; /* Light text color */
+    font-family: sans-serif; /* Basic fallback font */
+    background-color: #111; /* Dark background */
+    color: #eee; /* Default light text color */
 }
 
 #main-title {
     position: absolute;
     width: 100%;
-    top: 20px; /* Adjust spacing */
+    top: 20px;
     left: 0;
     z-index: 10;
-    font-weight: normal; /* Adjust as needed */
-    /* Color similar to D&G logo/text */
-    color: #e0e0e0; /* Off-white */
+    font-weight: normal;
+    color: #e0e0e0;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
     margin: 0;
     padding: 10px 0;
     text-align: center;
-    pointer-events: none;
-    font-size: 2.2em; /* Adjust size */
+    pointer-events: none; /* Allow clicks to go through */
+    font-size: 2.2em;
     transition: opacity 0.5s ease-out; /* For fade out */
 }
 
@@ -36,6 +33,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
+    z-index: 1; /* Ensure canvas is behind UI */
 }
 
 #webgl-canvas {
@@ -44,34 +42,85 @@ body {
     height: 100%;
 }
 
-/* Style the Start Button */
+/* --- Button Common Styles --- */
+button {
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, opacity 0.5s ease-out;
+    font-family: inherit; /* Use body font */
+}
+
+button:hover {
+    filter: brightness(1.2); /* Simple hover effect */
+}
+
+
+/* --- Style for the Start Button --- */
 #start-game-button {
     position: absolute;
-    bottom: 40px; /* Position at bottom */
+    bottom: 10%;      /* Position lower */
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%); /* Center horizontally */
     z-index: 10;
     padding: 12px 25px;
     font-size: 1.1em;
-    /* Style similar to D&G buttons (adjust colors) */
-    background-color: #333; /* Darker grey */
+    background-color: #333;
     color: #fff;
     border: 1px solid #555;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, opacity 0.5s ease-out;
 }
 
-#start-game-button:hover {
+#start-game-button:disabled {
+    background-color: #444;
+    color: #888;
+    cursor: not-allowed;
+}
+
+/* --- Style for the Refresh Button (Top Right) --- */
+#refresh-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+    padding: 8px 15px;
+    font-size: 0.9em;
     background-color: #555;
+    color: #fff;
+    border: 1px solid #777;
 }
 
-/* Style for Game UI elements if added later */
+
+/* --- Styles for the Card Text Display (Shows MESSAGE) --- */
+#card-text-display {
+    position: absolute;
+    bottom: 20%;      /* Position above the start button */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;       /* Allow it to take more width */
+    max-width: 500px; /* Prevent getting too wide */
+    background-color: rgba(30, 30, 30, 0.9); /* Darker, slightly more opaque background */
+    color: #E0E0E0;      /* Light text color */
+    padding: 15px 20px; /* Padding for text */
+    border-radius: 8px; /* Rounded rectangle */
+    font-size: 1.1em;   /* Readable font size for messages */
+    font-family: sans-serif;
+    text-align: center;
+    line-height: 1.4;   /* Better line spacing for readability */
+    opacity: 0;         /* Start hidden */
+    transition: opacity 0.5s ease-in-out; /* Animate opacity */
+    pointer-events: none; /* Allow clicks to pass through */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5); /* Slightly stronger shadow */
+    z-index: 100;       /* Ensure it's on top */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+/* --- End Card Text Styles --- */
+
+/* Optional: Add styles for game UI elements if needed later */
+/*
 #game-ui {
     position: absolute;
-    top: 80px; /* Example position */
+    top: 80px;
     left: 20px;
     z-index: 10;
     color: #fff;
-    /* Add more styles as needed */
 }
+*/
