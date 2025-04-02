@@ -18,9 +18,9 @@ function shuffleArray(array) {
 // --- List of your image filenames ---
 const availableImageFiles = [
     "1.jpg", "10.jpg", "11.jpg", "12.jpg", "13.jpg", "14.jpg", "15.jpg",
-    "17.jpg", "21.jpg", "22.jpg", "23.jpg", "24.jpg", "25.jpg", "26.jpg",
+    "17.jpg", "21.jpg", "22.jpg", "23.jpg", "24.jpg", "25.jpg", 
     "27.jpg", "28.jpg", "29.jpg", "3.jpg",  "30.jpg", "31.jpg", "32.jpg",
-    "33.jpg", "35.jpg", "36.jpg", "37.jpg", "38.jpg", "4.jpg",  "40.jpg",
+    "33.jpg", "35.jpg", "36.jpg", "37.jpg", "38.jpg",  "40.jpg",
     "41.jpg", "42.jpg", "43.jpg", "44.JPEG","45.JPEG","46.JPEG","47.JPEG",
     "6.jpg",  "9.jpg"
 ];
