@@ -16,6 +16,7 @@ function shuffleArray(array) {
 }
 
 // --- List of your image filenames ---
+// image 4 and 26 removed 
 const availableImageFiles = [
     "1.jpg", "10.jpg", "11.jpg", "12.jpg", "13.jpg", "14.jpg", "15.jpg",
     "17.jpg", "21.jpg", "22.jpg", "23.jpg", "24.jpg", "25.jpg", 
